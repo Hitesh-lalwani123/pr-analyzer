@@ -11,7 +11,7 @@ An intelligent GitHub Actions-powered automation system that analyzes pull reque
 - **Loop Prevention**: Won't trigger on its own documentation updates
 - **PR Integration**: Posts detailed analysis and diff previews as PR comments
 - **Zero Manual Work**: Commits README updates directly to your PR branch
-
+- Added new email functionality
 ## 🚀 What It Does
 
 When you create a pull request from a feature branch to `main`, this system will:
@@ -168,5 +168,10 @@ MIT License - feel free to use this in your projects!
 - Inspired by the need for better documentation automation
 
 ---
+
+**🤖 This README can be automatically updated by the PR Analyzer itself!**
+
+
+**🤖 This README can be automatically updated by the PR Analyzer itself!**
 
 **🤖 This README can be automatically updated by the PR Analyzer itself!**
