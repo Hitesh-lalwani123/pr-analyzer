@@ -1,20 +1,23 @@
-# 🚀 Quick Start Guide - Using Grok AI
+# 🚀 Quick Start Guide - Using Groq AI
 
 ## Prerequisites
 
 1. **Python 3.11+** installed
 2. **GitHub repository** with Actions enabled
-3. **xAI Grok API key** - Get it here: https://console.x.ai/
+3. **Groq API key** (FREE!) - Get it here: https://console.groq.com/
 
 ## Setup Steps
 
-### 1. Get Your Grok API Key
+### 1. Get Your FREE Groq API Key
 
-1. Go to https://console.x.ai/
-2. Sign in or create an account
-3. Navigate to **API Keys** section
+1. Go to https://console.groq.com/
+2. Sign in with Google, GitHub, or email
+3. Navigate to **API Keys** section  
 4. Click **"Create API Key"**
-5. Copy your API key (starts with `xai-...`)
+5. Copy your API key (starts with `gsk_...`)
+
+> [!NOTE]
+> Groq offers **FREE API access** with generous rate limits! Perfect for this project.
 
 ### 2. Add GitHub Secret
 
@@ -22,8 +25,8 @@
 2. Navigate to: **Settings → Secrets and variables → Actions**
 3. Click **"New repository secret"**
 4. Add secret:
-   - **Name**: `XAI_API_KEY`
-   - **Value**: Your xAI API key
+   - **Name**: `GROQ_API_KEY`
+   - **Value**: Your Groq API key
 
 ### 3. Push Code to Repository
 
@@ -37,7 +40,7 @@ git init
 git add .
 
 # Commit
-git commit -m "Add PR analyzer with Grok AI"
+git commit -m "Add PR analyzer with Groq AI"
 
 # Add remote (replace with your repo URL)
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
@@ -53,18 +56,18 @@ Create a test PR to verify everything works:
 
 ```bash
 # Create feature branch
-git checkout -b feature/test-grok-analyzer
+git checkout -b feature/test-groq-analyzer
 
 # Add a new file with some functionality
 echo "def awesome_feature():
     '''An amazing new feature'''
-    return 'Powered by Grok!'
+    return 'Powered by Groq - Lightning Fast!'
 " > awesome_feature.py
 
 # Commit and push
 git add awesome_feature.py
-git commit -m "Add awesome feature using Grok analyzer"
-git push origin feature/test-grok-analyzer
+git commit -m "Add awesome feature with Groq analyzer"
+git push origin feature/test-groq-analyzer
 ```
 
 ### 5. Create Pull Request
@@ -77,22 +80,22 @@ git push origin feature/test-grok-analyzer
    
    Features:
    - New function for amazing functionality
-   - Powered by Grok AI analysis
+   - Lightning-fast analysis powered by Groq
    ```
 4. Click **"Create pull request"**
 
-### 6. Watch the Magic! ✨
+### 6. Watch the Magic! ⚡
 
-The Grok-powered analyzer will:
+The Groq-powered analyzer will (blazingly fast!):
 1. ✅ Automatically trigger within seconds
-2. ✅ Analyze your code changes using Grok
+2. ✅ Analyze your code using **Llama 3.3 70B** model
 3. ✅ Update the README
 4. ✅ Post a comment showing what changed
 5. ✅ Commit the updated README to your branch
 
 ### 7. Review and Merge
 
-1. Check the PR comment for Grok's analysis results
+1. Check the PR comment for Groq's analysis results
 2. Review the README changes in the commit
 3. If you're happy, merge the PR!
 
@@ -102,30 +105,34 @@ The Grok-powered analyzer will:
 - Check that the workflow file is in `.github/workflows/` on the main branch
 - Verify GitHub Actions is enabled in repository settings
 
-### "XAI_API_KEY not found" error?
+### "GROQ_API_KEY not found" error?
 - Make sure you added the secret correctly in GitHub Settings
-- Secret name must be exactly `XAI_API_KEY`
-- Verify your API key is valid at https://console.x.ai/
+- Secret name must be exactly `GROQ_API_KEY`
+- Verify your API key is valid at https://console.groq.com/
 
 ### README not updating?
 - Check if changes were significant enough (no test-only changes)
 - Look at workflow logs in Actions tab
-- Verify Grok API key is valid and has available credits
+- Verify Groq API key is valid
 
 ### Rate limiting?
-- xAI Grok has generous rate limits on the free tier
-- Check your usage at https://console.x.ai/
+- Groq has very generous free tier limits
+- Check your usage at https://console.groq.com/settings/limits
 
 ## Advanced Configuration
 
 ### Change AI Model
 
-Grok offers different models. Edit `.env.example` or update `ai_analyzer.py`:
+Groq offers multiple high-speed models. Edit `ai_analyzer.py` to change model:
 
-Available models:
-- **`grok-beta`** (default) - Latest model, best performance
-- **`grok-vision-beta`** - With vision capabilities  
-- **`grok-2-latest`** - Previous generation
+**Available FREE models:**
+- **`llama-3.3-70b-versatile`** (default) - Best balance, smartest
+- **`llama-3.1-70b-versatile`** - Fast and capable
+- **`llama3-70b-8192`** - Large context window
+- **`mixtral-8x7b-32768`** - Very fast, good quality
+- **`llama3-8b-8192`** - Fastest, smaller model
+
+All models are **FREE** with Groq! 🎉
 
 ### Adjust Sensitivity
 
@@ -145,10 +152,10 @@ python -m pip install -r requirements.txt --user
 
 # Create .env file
 copy .env.example .env
-# Edit .env and add your XAI_API_KEY
+# Edit .env and add your GROQ_API_KEY
 
 # Set environment variables
-$env:XAI_API_KEY="xai-your-api-key-here"
+$env:GROQ_API_KEY="gsk-your-api-key-here"
 $env:PR_NUMBER="1"
 $env:REPO_NAME="YOUR_USERNAME/YOUR_REPO"
 $env:BASE_REF="main"
@@ -171,20 +178,20 @@ python analyzer.py
 - Config file updates (`.json`, `.yaml`)
 - Documentation files
 
-## Why Grok?
+## Why Groq?
 
-✅ **Free tier available** - Generous free credits for testing  
-✅ **Fast responses** - Optimized for speed  
+✅ **100% FREE** - No credit card required, generous limits  
+✅ **Blazingly Fast** - Up to 10x faster than other APIs  
 ✅ **OpenAI-compatible** - Easy integration with existing tools  
-✅ **Great at code understanding** - Built for developer tasks  
-✅ **Latest technology** - State-of-the-art AI model  
+✅ **Powerful models** - Llama 3.3 70B, Mixtral, and more  
+✅ **Zero configuration** - Just add your API key  
 
 ## Need Help?
 
-- **Grok API Docs**: https://docs.x.ai/
-- **API Console**: https://console.x.ai/
+- **Groq API Docs**: https://console.groq.com/docs
+- **API Console**: https://console.groq.com/
 - Check the full documentation in `README.md`
 
 ---
 
-**You're all set! 🎉 Create your first PR and watch Grok analyze your code!**
+**You're all set! 🎉 Create your first PR and watch Groq's lightning-fast analysis!**

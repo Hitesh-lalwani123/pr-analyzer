@@ -1,5 +1,5 @@
 """
-AI-powered code analysis using xAI's Grok.
+AI-powered code analysis using Groq.
 Analyzes code changes to detect new features, removals, and significant modifications.
 """
 
@@ -9,28 +9,28 @@ from openai import OpenAI
 
 
 class AIAnalyzer:
-    """Analyzes code changes using xAI Grok AI."""
+    """Analyzes code changes using Groq AI (fast LLM inference)."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "grok-beta"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "llama-3.3-70b-versatile"):
         """
-        Initialize the AI analyzer with Grok.
+        Initialize the AI analyzer with Groq.
         
         Args:
-            api_key: Grok API key (defaults to XAI_API_KEY env var)
-            model: Model name to use (default: grok-beta - free tier)
+            api_key: Groq API key (defaults to GROQ_API_KEY env var)
+            model: Model name to use (default: llama-3.3-70b-versatile - free tier)
         """
-        self.api_key = api_key or os.getenv("XAI_API_KEY")
+        self.api_key = api_key or os.getenv("GROQ_API_KEY")
         if not self.api_key:
-            raise ValueError("XAI_API_KEY not found in environment variables")
+            raise ValueError("GROQ_API_KEY not found in environment variables")
         
-        # Initialize OpenAI client with xAI endpoint
+        # Initialize OpenAI client with Groq endpoint
         self.client = OpenAI(
             api_key=self.api_key,
-            base_url="https://api.x.ai/v1"
+            base_url="https://api.groq.com/openai/v1"
         )
         self.model = model
         
-        print(f"✅ Initialized Grok model: {model}")
+        print(f"✅ Initialized Groq model: {model}")
     
     def analyze_changes(
         self, 
