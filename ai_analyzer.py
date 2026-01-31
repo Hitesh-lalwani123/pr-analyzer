@@ -1,30 +1,36 @@
 """
-AI-powered code analysis using Google Gemini.
+AI-powered code analysis using xAI's Grok.
 Analyzes code changes to detect new features, removals, and significant modifications.
 """
 
 import os
 from typing import Dict, List, Optional
-import google.generativeai as genai
+from openai import OpenAI
 
 
 class AIAnalyzer:
-    """Analyzes code changes using Google Gemini AI."""
+    """Analyzes code changes using xAI Grok AI."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "grok-beta"):
         """
-        Initialize the AI analyzer.
+        Initialize the AI analyzer with Grok.
         
         Args:
-            api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
-            model: Model name to use (default: gemini-1.5-flash - free tier)
+            api_key: Grok API key (defaults to XAI_API_KEY env var)
+            model: Model name to use (default: grok-beta - free tier)
         """
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_key = api_key or os.getenv("XAI_API_KEY")
         if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not found in environment variables")
+            raise ValueError("XAI_API_KEY not found in environment variables")
         
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(model)
+        # Initialize OpenAI client with xAI endpoint
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.x.ai/v1"
+        )
+        self.model = model
+        
+        print(f"✅ Initialized Grok model: {model}")
     
     def analyze_changes(
         self, 
@@ -53,8 +59,23 @@ class AIAnalyzer:
         prompt = self._build_analysis_prompt(code_diff, pr_description, changed_files)
         
         try:
-            response = self.model.generate_content(prompt)
-            return self._parse_analysis_response(response.text)
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a code analysis assistant that provides structured JSON responses."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3,
+                max_tokens=2000
+            )
+            
+            return self._parse_analysis_response(response.choices[0].message.content)
         except Exception as e:
             print(f"Error during AI analysis: {e}")
             return {

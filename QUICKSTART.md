@@ -1,23 +1,31 @@
-# 🚀 Quick Start Guide
+# 🚀 Quick Start Guide - Using Grok AI
 
 ## Prerequisites
 
 1. **Python 3.11+** installed
 2. **GitHub repository** with Actions enabled
-3. **Google Gemini API key** - Get it here: https://makersuite.google.com/app/apikey
+3. **xAI Grok API key** - Get it here: https://console.x.ai/
 
 ## Setup Steps
 
-### 1. Add GitHub Secret
+### 1. Get Your Grok API Key
+
+1. Go to https://console.x.ai/
+2. Sign in or create an account
+3. Navigate to **API Keys** section
+4. Click **"Create API Key"**
+5. Copy your API key (starts with `xai-...`)
+
+### 2. Add GitHub Secret
 
 1. Go to your repository on GitHub
 2. Navigate to: **Settings → Secrets and variables → Actions**
 3. Click **"New repository secret"**
 4. Add secret:
-   - **Name**: `GEMINI_API_KEY`
-   - **Value**: Your Gemini API key
+   - **Name**: `XAI_API_KEY`
+   - **Value**: Your xAI API key
 
-### 2. Push Code to Repository
+### 3. Push Code to Repository
 
 ```bash
 cd E:\ai\pr_analysis
@@ -29,7 +37,7 @@ git init
 git add .
 
 # Commit
-git commit -m "Add PR analyzer and README updater"
+git commit -m "Add PR analyzer with Grok AI"
 
 # Add remote (replace with your repo URL)
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
@@ -39,55 +47,54 @@ git branch -M main
 git push -u origin main
 ```
 
-### 3. Test the System
+### 4. Test the System
 
 Create a test PR to verify everything works:
 
 ```bash
 # Create feature branch
-git checkout -b feature/test-analyzer
+git checkout -b feature/test-grok-analyzer
 
 # Add a new file with some functionality
-echo "def new_feature():
-    '''A new amazing feature'''
-    return 'This is new!'
-" > new_feature.py
+echo "def awesome_feature():
+    '''An amazing new feature'''
+    return 'Powered by Grok!'
+" > awesome_feature.py
 
 # Commit and push
-git add new_feature.py
-git commit -m "Add new feature for testing analyzer"
-git push origin feature/test-analyzer
+git add awesome_feature.py
+git commit -m "Add awesome feature using Grok analyzer"
+git push origin feature/test-grok-analyzer
 ```
 
-### 4. Create Pull Request
+### 5. Create Pull Request
 
 1. Go to your repository on GitHub
 2. Click **"Compare & pull request"**
 3. Add a description like:
    ```
-   This PR adds a new feature that does XYZ.
+   This PR adds an awesome new feature.
    
    Features:
    - New function for amazing functionality
-   - Improves user experience
+   - Powered by Grok AI analysis
    ```
 4. Click **"Create pull request"**
 
-### 5. Watch the Magic! ✨
+### 6. Watch the Magic! ✨
 
-The analyzer will:
+The Grok-powered analyzer will:
 1. ✅ Automatically trigger within seconds
-2. ✅ Analyze your code changes
+2. ✅ Analyze your code changes using Grok
 3. ✅ Update the README
 4. ✅ Post a comment showing what changed
 5. ✅ Commit the updated README to your branch
 
-### 6. Review and Merge
+### 7. Review and Merge
 
-1. Check the PR comment for analysis results
+1. Check the PR comment for Grok's analysis results
 2. Review the README changes in the commit
 3. If you're happy, merge the PR!
-4. If you want changes, edit the README directly
 
 ## Troubleshooting
 
@@ -95,29 +102,30 @@ The analyzer will:
 - Check that the workflow file is in `.github/workflows/` on the main branch
 - Verify GitHub Actions is enabled in repository settings
 
-### "GEMINI_API_KEY not found" error?
+### "XAI_API_KEY not found" error?
 - Make sure you added the secret correctly in GitHub Settings
-- Secret name must be exactly `GEMINI_API_KEY`
+- Secret name must be exactly `XAI_API_KEY`
+- Verify your API key is valid at https://console.x.ai/
 
 ### README not updating?
 - Check if changes were significant enough (no test-only changes)
 - Look at workflow logs in Actions tab
-- Verify Gemini API key is valid
+- Verify Grok API key is valid and has available credits
 
-### Getting rate limited?
-- Gemini free tier has limits
-- Consider upgrading or spacing out PRs
+### Rate limiting?
+- xAI Grok has generous rate limits on the free tier
+- Check your usage at https://console.x.ai/
 
 ## Advanced Configuration
 
 ### Change AI Model
 
-Edit `.github/workflows/pr-analyzer.yml`:
+Grok offers different models. Edit `.env.example` or update `ai_analyzer.py`:
 
-```yaml
-env:
-  ANALYSIS_MODEL: gemini-1.5-flash  # Free tier model (recommended)
-```
+Available models:
+- **`grok-beta`** (default) - Latest model, best performance
+- **`grok-vision-beta`** - With vision capabilities  
+- **`grok-2-latest`** - Previous generation
 
 ### Adjust Sensitivity
 
@@ -137,10 +145,11 @@ python -m pip install -r requirements.txt --user
 
 # Create .env file
 copy .env.example .env
-# Edit .env and add your keys
+# Edit .env and add your XAI_API_KEY
 
 # Set environment variables
-$env:PR_NUMBER="123"
+$env:XAI_API_KEY="xai-your-api-key-here"
+$env:PR_NUMBER="1"
 $env:REPO_NAME="YOUR_USERNAME/YOUR_REPO"
 $env:BASE_REF="main"
 $env:HEAD_REF="feature-branch"
@@ -162,10 +171,20 @@ python analyzer.py
 - Config file updates (`.json`, `.yaml`)
 - Documentation files
 
+## Why Grok?
+
+✅ **Free tier available** - Generous free credits for testing  
+✅ **Fast responses** - Optimized for speed  
+✅ **OpenAI-compatible** - Easy integration with existing tools  
+✅ **Great at code understanding** - Built for developer tasks  
+✅ **Latest technology** - State-of-the-art AI model  
+
 ## Need Help?
 
-Check the full documentation in [README.md](README.md) and [walkthrough.md](C:\Users\HITESH\.gemini\antigravity\brain\ea063e15-0c80-438c-92e8-4b82174c5117\walkthrough.md)
+- **Grok API Docs**: https://docs.x.ai/
+- **API Console**: https://console.x.ai/
+- Check the full documentation in `README.md`
 
 ---
 
-**You're all set! 🎉 Create your first PR and watch the analyzer work its magic!**
+**You're all set! 🎉 Create your first PR and watch Grok analyze your code!**

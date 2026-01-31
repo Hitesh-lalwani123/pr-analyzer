@@ -1,11 +1,11 @@
 # 📚 Dynamic PR Analyzer & README Updater
 
-An intelligent GitHub Actions-powered automation system that analyzes pull requests and automatically updates your project's README documentation based on code changes.
+An intelligent GitHub Actions-powered automation system that analyzes pull requests using **xAI Grok** and automatically updates your project's README documentation based on code changes.
 
 ## ✨ Features
 
 - **Automatic PR Analysis**: Detects significant code changes when PRs are opened or updated
-- **AI-Powered Understanding**: Uses Google Gemini to understand new features, removed functionality, and modifications
+- **AI-Powered Understanding**: Uses **Grok by xAI** to understand new features, removed functionality, and modifications
 - **Smart README Updates**: Automatically adds, removes, or updates documentation based on changes
 - **Intelligent Filtering**: Ignores test files, config changes, and README-only commits
 - **Loop Prevention**: Won't trigger on its own documentation updates
@@ -41,7 +41,7 @@ When you create a pull request from a feature branch to `main`, this system will
 ### Prerequisites
 
 - A GitHub repository with Actions enabled
-- Google Gemini API key (get one at [Google AI Studio](https://makersuite.google.com/app/apikey))
+- **xAI Grok API key** (get one at [xAI Console](https://console.x.ai/))
 
 ### Installation
 
@@ -53,7 +53,7 @@ When you create a pull request from a feature branch to `main`, this system will
 
 2. **Add GitHub Secret**
    - Go to your repository Settings → Secrets and variables → Actions
-   - Add a new secret named `GEMINI_API_KEY` with your API key
+   - Add a new secret named `XAI_API_KEY` with your Grok API key
 
 3. **Copy the workflow file**
    - The `.github/workflows/pr-analyzer.yml` is already set up
@@ -164,7 +164,7 @@ MIT License - feel free to use this in your projects!
 ## 🙏 Acknowledgments
 
 - Built with [PyGithub](https://github.com/PyGithub/PyGithub)
-- Powered by [Google Gemini AI](https://deepmind.google/technologies/gemini/)
+- Powered by [Grok AI by xAI](https://x.ai/)
 - Inspired by the need for better documentation automation
 
 ---
