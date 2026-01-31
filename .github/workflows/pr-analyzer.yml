@@ -1,0 +1,98 @@
+name: PR Analyzer and README Updater
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+  # Trigger on PR review approval for finalizing changes
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  analyze-and-update:
+    runs-on: ubuntu-latest
+    
+    # Skip if this is a README-only update from the bot
+    if: |
+      github.event_name == 'pull_request' && 
+      !contains(github.event.head_commit.message, '[skip-pr-analyzer]')
+    
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Check if README-only changes
+        id: check_changes
+        run: |
+          # Get list of changed files
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+          
+          # Check if only README was changed
+          NON_README_CHANGES=$(echo "$CHANGED_FILES" | grep -v -i "readme.md" || true)
+          
+          if [ -z "$NON_README_CHANGES" ]; then
+            echo "readme_only=true" >> $GITHUB_OUTPUT
+            echo "Only README changes detected. Skipping analysis."
+          else
+            echo "readme_only=false" >> $GITHUB_OUTPUT
+            echo "Code changes detected. Proceeding with analysis."
+          fi
+
+      - name: Run PR Analyzer
+        if: steps.check_changes.outputs.readme_only == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_NAME: ${{ github.repository }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          python analyzer.py
+
+      - name: Commit and Push README updates
+        if: steps.check_changes.outputs.readme_only == 'false'
+        run: |
+          git config --global user.name "PR Analyzer Bot"
+          git config --global user.email "pr-analyzer-bot@users.noreply.github.com"
+          
+          # Check if README was modified
+          if git diff --quiet README.md; then
+            echo "No README changes to commit"
+          else
+            git add README.md
+            git commit -m "docs: update README based on PR changes [skip-pr-analyzer]"
+            git push origin ${{ github.event.pull_request.head.ref }}
+          fi
+
+  # Job to handle user approval/rejection via PR comments
+  handle-approval:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
+    
+    steps:
+      - name: Check for README update approval
+        run: |
+          echo "README changes approved via PR review"
+          echo "Changes are already committed in the analyze-and-update job"
