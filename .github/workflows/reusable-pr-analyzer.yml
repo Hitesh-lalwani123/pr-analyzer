@@ -1,0 +1,121 @@
+name: Reusable PR Analyzer
+
+on:
+  workflow_call:
+    inputs:
+      analysis_model:
+        description: 'Groq model to use for analysis'
+        required: false
+        type: string
+        default: 'llama-3.3-70b-versatile'
+      min_significance:
+        description: 'Minimum significance level to update README (low, medium, high)'
+        required: false
+        type: string
+        default: 'medium'
+    secrets:
+      GROQ_API_KEY:
+        description: 'Groq API key for AI analysis'
+        required: true
+
+jobs:
+  analyze-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout PR Branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      
+      - name: Check if README-only changes
+        id: check_changes
+        run: |
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+          echo "Changed files: $CHANGED_FILES"
+          
+          # Check if only README was changed
+          README_ONLY=true
+          while IFS= read -r file; do
+            if [[ ! "$file" =~ ^README\.md$ ]]; then
+              README_ONLY=false
+              break
+            fi
+          done <<< "$CHANGED_FILES"
+          
+          echo "readme_only=$README_ONLY" >> $GITHUB_OUTPUT
+          
+          # Also check for skip marker in commit message
+          LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+          if [[ "$LAST_COMMIT_MSG" == *"[skip-pr-analyzer]"* ]]; then
+            echo "Skip marker found in commit message"
+            echo "readme_only=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Download Analyzer Scripts
+        if: steps.check_changes.outputs.readme_only == 'false'
+        run: |
+          echo "📥 Downloading PR analyzer scripts..."
+          
+          BASE_URL="https://raw.githubusercontent.com/${{ github.repository_owner }}/pr-analyzer/main"
+          
+          curl -fsSL "$BASE_URL/analyzer.py" -o analyzer.py
+          curl -fsSL "$BASE_URL/ai_analyzer.py" -o ai_analyzer.py
+          curl -fsSL "$BASE_URL/filters.py" -o filters.py
+          curl -fsSL "$BASE_URL/readme_updater.py" -o readme_updater.py
+          curl -fsSL "$BASE_URL/requirements.txt" -o pr-analyzer-requirements.txt
+          
+          echo "✅ Scripts downloaded successfully"
+      
+      - name: Set up Python
+        if: steps.check_changes.outputs.readme_only == 'false'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        if: steps.check_changes.outputs.readme_only == 'false'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r pr-analyzer-requirements.txt
+      
+      - name: Run PR Analyzer
+        if: steps.check_changes.outputs.readme_only == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_NAME: ${{ github.repository }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          ANALYSIS_MODEL: ${{ inputs.analysis_model }}
+          MIN_CHANGE_SIGNIFICANCE: ${{ inputs.min_significance }}
+        run: |
+          python analyzer.py
+      
+      - name: Cleanup Temporary Files
+        if: always()
+        run: |
+          echo "🧹 Cleaning up temporary files..."
+          rm -f analyzer.py ai_analyzer.py filters.py readme_updater.py pr-analyzer-requirements.txt
+          echo "✅ Cleanup complete"
+      
+      - name: Commit and Push README Updates
+        if: steps.check_changes.outputs.readme_only == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [[ -n $(git status -s) ]]; then
+            git add README.md
+            git commit -m "docs: update README based on PR changes [skip-pr-analyzer]"
+            git push
+            echo "✅ README updated and pushed"
+          else
+            echo "ℹ️ No changes to commit"
+          fi

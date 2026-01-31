@@ -1,0 +1,30 @@
+name: PR Analyzer (Release to Main Only)
+
+# Only trigger when creating PR from release-* branch to main
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main  # Target branch
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  call-analyzer:
+    # Only run if:
+    # 1. PR is targeting main branch
+    # 2. Source branch starts with "release-" or "release/"
+    # 3. Either PR opened/updated OR review approved
+    if: |
+      github.event.pull_request.base.ref == 'main' &&
+      (startsWith(github.event.pull_request.head.ref, 'release-') || 
+       startsWith(github.event.pull_request.head.ref, 'release/')) &&
+      (github.event_name == 'pull_request' || 
+       (github.event_name == 'pull_request_review' && github.event.review.state == 'approved'))
+    
+    uses: Hitesh-lalwani123/pr-analyzer/.github/workflows/reusable-pr-analyzer.yml@main
+    secrets:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    with:
+      analysis_model: 'llama-3.3-70b-versatile'
+      min_significance: 'medium'

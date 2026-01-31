@@ -2,6 +2,8 @@
 
 An intelligent GitHub Actions-powered automation system that analyzes pull requests using **Groq AI** and automatically updates your project's README documentation based on code changes.
 
+> **🎯 Reusable Workflow**: Easily add this to any GitHub repository in minutes! See [REUSABLE_GUIDE.md](REUSABLE_GUIDE.md)
+
 ## ✨ Features
 
 - **Automatic PR Analysis**: Detects significant code changes when PRs are opened or updated
@@ -11,8 +13,9 @@ An intelligent GitHub Actions-powered automation system that analyzes pull reque
 - **Loop Prevention**: Won't trigger on its own documentation updates
 - **PR Integration**: Posts detailed analysis and diff previews as PR comments
 - **Zero Manual Work**: Commits README updates directly to your PR branch
-- Added new email functionality
-## 🚀 What It Does
+- **100% Free**: Uses Groq's free tier for lightning-fast AI inference
+
+## 🚀 Quick Start (For Any Repository)
 
 When you create a pull request from a feature branch to `main`, this system will:
 
@@ -37,6 +40,44 @@ When you create a pull request from a feature branch to `main`, this system will
    - You can review and approve as part of normal PR flow
 
 ## 📋 Setup Instructions
+
+**Method 1: Automated Setup (Recommended)**
+
+```bash
+# Download the setup script
+curl -O https://raw.githubusercontent.com/YOUR_USERNAME/pr-analyzer/main/setup.py
+
+# Run it in your repository
+python setup.py
+```
+
+**Method 2: Manual Copy**
+
+1. Copy these files to your repository:
+   - `.github/workflows/pr-analyzer.yml`
+   - `analyzer.py`, `ai_analyzer.py`, `filters.py`, `readme_updater.py`
+   - Add to your `requirements.txt`:
+     ```
+     PyGithub==2.1.1
+     groq==0.4.2
+     httpx==0.24.1
+     python-dotenv==1.0.0
+     GitPython==3.1.40
+     ```
+
+2. Get FREE Groq API key: https://console.groq.com/
+
+3. Add GitHub secret `GROQ_API_KEY`
+
+4. Push and create a PR to test!
+
+**📖 Detailed Guide**: See [REUSABLE_GUIDE.md](REUSABLE_GUIDE.md) for full instructions, configuration options, and troubleshooting.
+
+---
+
+## 🔧 Setup for This Repository
+
+If you want to develop/test this analyzer itself:
 
 ### Prerequisites
 
