@@ -116,7 +116,7 @@ Edit `.github/workflows/pr-analyzer.yml`:
 
 ```yaml
 env:
-  ANALYSIS_MODEL: gemini-1.5-flash  # or gemini-pro
+  ANALYSIS_MODEL: gemini-1.5-flash  # Free tier model (recommended)
 ```
 
 ### Adjust Sensitivity

@@ -11,13 +11,13 @@ import google.generativeai as genai
 class AIAnalyzer:
     """Analyzes code changes using Google Gemini AI."""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-pro"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
         """
         Initialize the AI analyzer.
         
         Args:
             api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
-            model: Model name to use
+            model: Model name to use (default: gemini-1.5-flash - free tier)
         """
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
