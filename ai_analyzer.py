@@ -5,7 +5,7 @@ Analyzes code changes to detect new features, removals, and significant modifica
 
 import os
 from typing import Dict, List, Optional
-from openai import OpenAI
+from groq import Groq
 
 
 class AIAnalyzer:
@@ -23,11 +23,8 @@ class AIAnalyzer:
         if not self.api_key:
             raise ValueError("GROQ_API_KEY not found in environment variables")
         
-        # Initialize OpenAI client with Groq endpoint
-        self.client = OpenAI(
-            api_key=self.api_key,
-            base_url="https://api.groq.com/openai/v1"
-        )
+        # Initialize Groq client
+        self.client = Groq(api_key=self.api_key)
         self.model = model
         
         print(f"✅ Initialized Groq model: {model}")
