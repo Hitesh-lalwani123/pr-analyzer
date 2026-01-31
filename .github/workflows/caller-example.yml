@@ -1,0 +1,23 @@
+name: PR Analyzer (Caller)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  call-analyzer:
+    # Only run on approval or when PR is opened/updated to main
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+    
+    uses: YOUR_USERNAME/pr-analyzer/.github/workflows/reusable-pr-analyzer.yml@main
+    secrets:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    with:
+      analysis_model: 'llama-3.3-70b-versatile'  # Optional: change model
+      min_significance: 'medium'                  # Optional: low, medium, high
