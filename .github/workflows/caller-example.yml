@@ -11,6 +11,11 @@ on:
 
 jobs:
   call-analyzer:
+    # Add required permissions for the reusable workflow
+    permissions:
+      contents: write        # Required to commit README updates
+      pull-requests: write   # Required to post PR comments
+    
     # Only run if:
     # 1. PR is targeting main branch
     # 2. Source branch starts with "release-" or "release/"
