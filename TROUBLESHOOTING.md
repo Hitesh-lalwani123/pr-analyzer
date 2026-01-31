@@ -45,6 +45,35 @@ You must explicitly grant these permissions in your workflow file.
 
 ---
 
+## 🔒 Crucial Repository Settings (Check These!)
+
+If you've added the YAML permissions above but still get the error, your **repository settings** are likely overriding the workflow.
+
+### 1. Enable Read/Write Permissions in UI
+1. Go to your repository **Settings**
+2. Click **Actions** → **General**
+3. Scroll down to **Workflow permissions**
+4. Select **"Read and write permissions"**
+5. Click **Save**
+
+### 2. Allow PR Creation/Approval
+1. In the same **Workflow permissions** section
+2. Check the box: **"Allow GitHub Actions to create and approve pull requests"**
+3. Click **Save**
+
+> [!IMPORTANT]
+> If these settings are set to **"Read repository contents and packages permissions"**, GitHub will ignore the `permissions: write` in your YAML and stick to Read-Only.
+
+---
+
+## 🍴 Are you testing from a Fork?
+
+If you are opening the PR from a **forked repository**, GitHub always restricts the `GITHUB_TOKEN` to read-only for security reasons (to prevent malicious PRs from stealing secrets or modifying your code).
+
+**Solution:**
+- Test the workflow by creating a branch **within the same repository** (not a fork).
+- Or, use the `pull_request_target` event (⚠️ CAUTION: Only do this if you understand the security implications).
+
 ## Other Common Issues
 
 ### Issue: "GROQ_API_KEY not found"
