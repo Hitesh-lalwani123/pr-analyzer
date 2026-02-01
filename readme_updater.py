@@ -160,8 +160,11 @@ class READMEUpdater:
         """
         modified = False
         
-        # Add new features
-        if analysis.get('new_features'):
+        # Update documentation entries (Structured features)
+        if analysis.get('documentation_entries'):
+            modified |= self._update_documentation_entries(analysis['documentation_entries'])
+        # Fallback to simple features if no structured docs (or add them too if needed, but per request, strict separation)
+        elif analysis.get('new_features'):
             modified |= self._add_features(analysis['new_features'])
         
         # Remove deprecated features
@@ -335,6 +338,62 @@ class READMEUpdater:
         
         self.content = '\n'.join(lines)
     
+    def _update_documentation_entries(self, entries: List[Dict[str, str]]) -> bool:
+        """
+        Update structured documentation entries in README.
+        
+        Args:
+            entries: List of dicts with name, description, input, output
+        """
+        if not entries:
+            return False
+            
+        # Find or create Features section
+        features_section = self._find_section(['Features', 'Key Features', 'Functionality', 'What it does'])
+        
+        formatted_entries = []
+        for entry in entries:
+            # Format: 
+            # ### Name
+            # Description
+            # - **Input**: ...
+            # - **Output**: ...
+            
+            content = f"\n### {entry.get('name', 'Feature')}\n"
+            content += f"{entry.get('description', '')}\n\n"
+            if entry.get('input'):
+                content += f"- **Input**: {entry['input']}\n"
+            if entry.get('output'):
+                content += f"- **Output**: {entry['output']}\n"
+            formatted_entries.append(content)
+            
+        if features_section:
+            # Append to existing Features section
+            # Logic: Check if feature name already exists to avoid duplicates
+            current_content = self.sections[features_section]['content']
+            new_content = current_content
+            
+            added_any = False
+            for i, entry in enumerate(entries):
+                name = entry.get('name', '')
+                if f"### {name}" not in current_content:
+                    new_content += formatted_entries[i]
+                    added_any = True
+            
+            if added_any:
+                self.sections[features_section]['content'] = new_content
+                self._rebuild_content()
+                return True
+        else:
+            # Create new Features section
+            new_section_content = "\n## Features\n" + "".join(formatted_entries)
+            self.content = self._insert_after_preamble(new_section_content)
+            self.sections = self._parse_sections(self.content)
+            self._rebuild_content()
+            return True
+            
+        return False
+
     def save(self):
         """Save the updated README."""
         with open(self.readme_path, 'w', encoding='utf-8') as f:

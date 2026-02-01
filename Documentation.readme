@@ -1,10 +1,13 @@
 
-## Configuration
-
-- Updated requirements.txt: requests>=2.31.0
-- Added GROQ_API_KEY env var
-
-# Doc Title
-
 ## Features
-- Existing Feature
+
+### maximize
+Finds the largest number in a list.
+
+- **Input**: List of integers
+- **Output**: Integer (max value)
+
+# Product Docs
+
+
+
