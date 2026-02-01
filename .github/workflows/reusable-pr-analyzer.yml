@@ -63,7 +63,7 @@ jobs:
         run: |
           echo "📥 Downloading PR analyzer scripts..."
           
-          BASE_URL="https://raw.githubusercontent.com/${{ github.repository_owner }}/pr-analyzer/main"
+          BASE_URL="https://raw.githubusercontent.com/${{ github.repository_owner }}/pr-analyzer/develop"
           
           curl -fsSL "$BASE_URL/analyzer.py" -o analyzer.py
           curl -fsSL "$BASE_URL/ai_analyzer.py" -o ai_analyzer.py
