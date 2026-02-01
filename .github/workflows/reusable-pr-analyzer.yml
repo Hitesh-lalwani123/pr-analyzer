@@ -112,11 +112,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          if [[ -n $(git status -s) ]]; then
-            git add README.md Updates.readme Documentation.readme || true
+          # Attempt to add the specific files we care about
+          # We do not use 'git add .' to avoid adding __pycache__ or other garbage
+          
+          # 1. README.md (might simply be modified)
+          git add README.md 2>/dev/null || true
+          
+          # 2. Add new doc files if they exist
+          [ -f Updates.readme ] && git add Updates.readme
+          [ -f Documentation.readme ] && git add Documentation.readme
+          
+          # 3. Check if anything is actually staged for commit
+          # This ignores untracked files that we didn't explicitly add
+          if [[ -n $(git diff --staged --name-only) ]]; then
             git commit -m "docs: update README based on PR changes [skip-pr-analyzer]"
             git push
             echo "✅ README updated and pushed"
           else
-            echo "ℹ️ No changes to commit"
+            echo "ℹ️  No relevant documentation changes to commit"
           fi
