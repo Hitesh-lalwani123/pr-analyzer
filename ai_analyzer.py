@@ -106,20 +106,21 @@ INSTRUCTIONS:
 1. Identify NEW FEATURES or functionality added in this PR
 2. Identify REMOVED or DEPRECATED features
 3. Identify MODIFIED features (significant changes to existing functionality)
-4. Determine the significance level: LOW (minor changes), MEDIUM (notable features), HIGH (major functionality)
-5. Provide a brief summary suitable for documentation
+4. Identify CONFIGURATION updates (e.g., dependency version changes, new environment variables, workflow updates, settings)
+5. Determine the significance level: LOW (minor changes), MEDIUM (notable features), HIGH (major functionality)
+6. Provide a brief summary suitable for documentation
 
 Focus on user-facing features and significant architectural changes. Ignore:
 - Test file changes
 - Minor refactoring without functional impact
 - Code style changes
-- Configuration updates
 
 Respond in the following JSON format:
 {{
     "new_features": ["Feature 1 description", "Feature 2 description"],
     "removed_features": ["Removed feature description"],
     "modified_features": ["Modified feature description"],
+    "configuration_updates": ["Dependency X updated to Y", "Added ENV_VAR"],
     "significance": "low|medium|high",
     "summary": "Brief summary of changes suitable for documentation"
 }}
@@ -161,6 +162,7 @@ Be concise and focus on what matters to end users and developers reading the doc
                 'new_features': data.get('new_features', []),
                 'removed_features': data.get('removed_features', []),
                 'modified_features': data.get('modified_features', []),
+                'configuration_updates': data.get('configuration_updates', []),
                 'significance': data.get('significance', 'medium').lower(),
                 'summary': data.get('summary', '')
             }
@@ -192,7 +194,8 @@ Be concise and focus on what matters to end users and developers reading the doc
         # Update if there are new features, removed features, or medium/high significance
         has_changes = (
             len(analysis.get('new_features', [])) > 0 or
-            len(analysis.get('removed_features', [])) > 0
+            len(analysis.get('removed_features', [])) > 0 or
+            len(analysis.get('configuration_updates', [])) > 0
         )
         
         is_significant = analysis.get('significance', 'low') in ['medium', 'high']

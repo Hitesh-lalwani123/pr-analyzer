@@ -1,0 +1,10 @@
+
+## Configuration
+
+- Updated requirements.txt: requests>=2.31.0
+- Added GROQ_API_KEY env var
+
+# Doc Title
+
+## Features
+- Existing Feature

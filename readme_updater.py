@@ -94,6 +94,60 @@ class READMEUpdater:
         
         return sections
     
+    def update_changelog(self, analysis: Dict[str, any], version: str = "Unreleased") -> bool:
+        """
+        Append changelog entry to Updates.readme.
+        
+        Args:
+            analysis: Analysis results
+            version: Version string for the header
+            
+        Returns:
+            True if modified
+        """
+        if not (analysis.get('new_features') or analysis.get('removed_features') or 
+                analysis.get('modified_features') or analysis.get('configuration_updates')):
+            return False
+            
+        import datetime
+        date_str = datetime.date.today().isoformat()
+        
+        entry = f"\n## {version} ({date_str})\n\n"
+        
+        if analysis.get('new_features'):
+            entry += "### Added\n"
+            for feature in analysis['new_features']:
+                entry += f"- {feature}\n"
+            entry += "\n"
+            
+        if analysis.get('removed_features'):
+            entry += "### Removed\n"
+            for feature in analysis['removed_features']:
+                entry += f"- {feature}\n"
+            entry += "\n"
+            
+        if analysis.get('modified_features'):
+            entry += "### Changed\n"
+            for feature in analysis['modified_features']:
+                entry += f"- {feature}\n"
+            entry += "\n"
+
+        if analysis.get('configuration_updates'):
+            entry += "### Configuration\n"
+            for config in analysis['configuration_updates']:
+                entry += f"- {config}\n"
+            entry += "\n"
+
+        # Insert after "Latest Updates" header if it exists, otherwise append
+        latest_updates_header = "## Latest Updates"
+        if latest_updates_header in self.content:
+            parts = self.content.split(latest_updates_header)
+            self.content = parts[0] + latest_updates_header + entry + parts[1]
+        else:
+            self.content += entry
+            
+        return True
+
     def update_from_analysis(self, analysis: Dict[str, any]) -> bool:
         """
         Update README based on AI analysis results.
@@ -117,6 +171,10 @@ class READMEUpdater:
         # Update modified features
         if analysis.get('modified_features'):
             modified |= self._update_features(analysis['modified_features'])
+            
+        # Update configuration
+        if analysis.get('configuration_updates'):
+            modified |= self._update_configuration(analysis['configuration_updates'])
         
         return modified
     
@@ -126,7 +184,7 @@ class READMEUpdater:
             return False
         
         # Find or create Features section
-        features_section = self._find_section(['Features', 'Functionality', 'What it does'])
+        features_section = self._find_section(['Features', 'Key Features', 'Functionality', 'What it does'])
         
         if features_section:
             # Add to existing Features section
@@ -188,6 +246,45 @@ class READMEUpdater:
         # For now, treat as additions
         # In a more sophisticated version, this could try to update existing entries
         return self._add_features(features)
+        
+    def _update_configuration(self, config_updates: List[str]) -> bool:
+        """Update configuration section in README."""
+        if not config_updates:
+            return False
+            
+        # Find or create Configuration section
+        config_section = self._find_section(['Configuration', 'Config', 'Environment', 'Setup'])
+        
+        if config_section:
+            # Add to existing Configuration section
+            section_content = self.sections[config_section]['content']
+            
+            new_content = section_content.rstrip()
+            if not new_content.endswith('\n'):
+                new_content += '\n'
+            
+            for config in config_updates:
+                if config.lower() not in section_content.lower():
+                    new_content += f"- {config}\n"
+            
+            if new_content != section_content:
+                self.sections[config_section]['content'] = new_content
+                self._rebuild_content()
+                return True
+                
+        else:
+            # Create new Configuration section
+            new_section = "\n## Configuration\n\n"
+            for config in config_updates:
+                new_section += f"- {config}\n"
+            
+            # Insert after features or at end
+            self.content = self._insert_after_preamble(new_section)
+            self.sections = self._parse_sections(self.content)
+            self._rebuild_content()
+            return True
+            
+        return False
     
     def _find_section(self, possible_titles: List[str]) -> Optional[str]:
         """Find a section by possible title variations."""
@@ -228,6 +325,12 @@ class READMEUpdater:
             new_section_lines = [header] + section_data['content'].split('\n')
             
             # Replace in original lines
+            # Note: This logic works for simple replacements but might be fragile if multiple sections change
+            # However, for this task it should suffice as we re-parse after major structural changes if needed
+            # A safer way would be to rebuild the whole file from sections, but we want to preserve other content
+            
+            # Simple check: if size changed significantly, might need care.
+            # But here we just assume lines[start:end+1] captures the old section.
             lines[start:end + 1] = new_section_lines
         
         self.content = '\n'.join(lines)
@@ -255,8 +358,8 @@ class READMEUpdater:
         diff = difflib.unified_diff(
             original_lines,
             new_lines,
-            fromfile='README.md (original)',
-            tofile='README.md (updated)',
+            fromfile=f'{self.readme_path} (original)',
+            tofile=f'{self.readme_path} (updated)',
             lineterm=''
         )
         

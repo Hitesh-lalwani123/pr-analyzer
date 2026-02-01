@@ -1,0 +1,10 @@
+# Changelog
+
+## Latest Updates
+## v1.1.0 (2026-02-01)
+
+### Configuration
+- Updated requirements.txt: requests>=2.31.0
+- Added GROQ_API_KEY env var
+
+
