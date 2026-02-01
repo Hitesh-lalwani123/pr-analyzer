@@ -103,19 +103,46 @@ class PRAnalyzer:
                 
             original_changelog = changelog_updater.content
             
-            # Determine version from branch name
-            # e.g., "release/1.2.0" -> "1.2.0", "main" -> "Unreleased"
+            # Determine version from source branch (head_ref), PR title, or body
             import re
-            version_match = re.search(r'release[/-]([\d.]+)', self.base_ref)
-            if version_match:
-                version_name = version_match.group(1)
-            elif self.base_ref in ['main', 'master']:
-                 # If merging to main/master without a release branch pattern, might be a direct merge
-                 # For now, let's keep it generic or try to find unrelated tags? 
-                 # User asked to take from base branch.
-                 version_name = "Unreleased"
+            
+            version_name = "Unreleased"
+            
+            # Helper to find version in text
+            def find_version(text):
+                if not text: return None
+                # Support: release/1.0.0, release-1.0.0, v1.0.0
+                match = re.search(r'(?:release[/-]|v)([\d.]+)', text, re.IGNORECASE)
+                return match.group(1) if match else None
+
+            # 1. Try Head Ref (Source Branch)
+            # self.head_ref is the source branch
+            v_head = find_version(self.head_ref)
+            
+            # 2. Try PR Title
+            v_title = find_version(pr.title)
+            
+            # 3. Try PR Description
+            v_body = find_version(pr.body)
+            
+            if v_head:
+                version_name = v_head
+                print(f"📦 Version detected from branch: {version_name}")
+            elif v_title:
+                version_name = v_title
+                print(f"📦 Version detected from PR title: {version_name}")
+            elif v_body:
+                version_name = v_body
+                print(f"📦 Version detected from PR body: {version_name}")
             else:
-                version_name = self.base_ref
+                # Fallback to base ref or generic
+                 # If base is release/x.x match it too
+                 v_base = find_version(self.base_ref)
+                 if v_base:
+                     version_name = v_base
+                     print(f"📦 Version detected from base branch: {version_name}")
+                 else:
+                     print("ℹ️  No version detected, using 'Unreleased'")
 
             changelog_modified = changelog_updater.update_changelog(analysis, version=version_name)
             

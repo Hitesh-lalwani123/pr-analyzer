@@ -91,55 +91,57 @@ class AIAnalyzer:
         changed_files: List[str]
     ) -> str:
         """Build the prompt for AI analysis."""
-        return f"""You are a code analysis assistant. Analyze the following pull request changes and provide a structured analysis.
+        return f"""ROLE: Senior Software Engineer & Code Auditor.
 
-PULL REQUEST DESCRIPTION:
-{pr_description if pr_description else "No description provided"}
+TASK: Analyze the provided code changes and generate a high-level, noise-free summary for changelogs and documentation.
 
-CHANGED FILES:
-{', '.join(changed_files)}
+INPUT DATA:
+- PR Description: {pr_description if pr_description else "None"}
+- Changed Files: {', '.join(changed_files)}
+- Code Diff:
+{code_diff[:8000]}  # Limited to avoid token limits
 
-CODE DIFF:
-{code_diff[:8000]}  # Limit to avoid token limits
+STRICT SIGNAL-TO-NOISE RATIO:
+- IGNORE: formatting changes, whitespace, added/removed empty lines, typo fixes in comments.
+- IGNORE: "Added new line", "Removed space", "Fixed indentation". These are NOT changelog items.
+- FOCUS: Logic changes, new features, bug fixes that affect behavior, configuration updates.
 
-INSTRUCTIONS:
-1. Identify NEW FEATURES or functionality added in this PR
-2. Identify REMOVED or DEPRECATED features
-3. Identify MODIFIED features (significant changes to existing functionality)
-4. Identify CONFIGURATION updates (e.g., dependency version changes, new environment variables, workflow updates, settings)
-5. For each NEW or MODIFIED feature, provide a "documentation_entry" with:
-    - Name: Function/Feature name
-    - Description: What it does (high level)
-    - Input: What it accepts (args, parameters, etc.)
-    - Output: What it returns or produces
-6. Determine the significance level: LOW (minor changes), MEDIUM (notable features), HIGH (major functionality)
-7. Provide a brief summary suitable for documentation
+OUTPUT RULES:
 
-Focus on user-facing features and significant architectural changes. 
-IMPORTANT: 
-- Bug fixes, minor refactors (e.g. "removed semicolon"), and internal cleanup should ONLY go to "modified_features" or ignored, NOT "new_features" or "documentation_entries".
-- "documentation_entries" are for the permanent "Documentation.readme" and should be high-quality and detailed.
-- "new_features" and "modified_features" are for the "Updates.readme" changelog.
+1. 'documentation_entries' [Target: DOCUMENTATION.md]:
+   - Content: ONLY significant, NEW, USER-FACING features.
+   - Requirement: Must be a clear functional addition.
+   - Format: Structured input/output.
 
-Respond in the following JSON format:
+2. 'new_features' / 'modified_features' / 'removed_features' [Target: RELEASES.md]:
+   - Content: Technical changelog items for other engineers.
+   - 'modified_features': Includes bug fixes ("Fixed NPE in X"), refactors ("Optimized Y loop"), functional changes.
+   - DO NOT report trivialities like "Added newline at EOF".
+
+3. 'configuration_updates':
+   - CRITICAL: Detect ALL changes to:
+     - Requirements/Dependencies (version bumps, new packages).
+     - Workflows (GitHub Actions, CI/CD).
+     - Environment variables or config files.
+   - Format: "Updated requirement X to v1.2", "Added workflow Y".
+
+RESPONSE FORMAT (JSON):
 {{
-    "new_features": ["Feature 1 description", "Feature 2 description"],
-    "removed_features": ["Removed feature description"],
-    "modified_features": ["Modified feature description", "Bug fix description"],
-    "configuration_updates": ["Dependency X updated to Y", "Added ENV_VAR"],
     "documentation_entries": [
         {{
-            "name": "feature_name",
-            "description": "High level description",
-            "input": "List of numbers",
-            "output": "Largest number"
+            "name": "function_name",
+            "description": "What it does.",
+            "input": "Args",
+            "output": "Returns"
         }}
     ],
+    "new_features": ["Added feature X"],
+    "modified_features": ["Fixed logic in Y", "Optimized Z"],
+    "removed_features": [],
+    "configuration_updates": ["Updated numpy", "Added CI step"],
     "significance": "low|medium|high",
-    "summary": "Brief summary of changes suitable for documentation"
+    "summary": "Executive summary."
 }}
-
-Be concise and focus on what matters to end users and developers reading the documentation.
 """
     
     def _parse_analysis_response(self, response_text: str) -> Dict[str, any]:
