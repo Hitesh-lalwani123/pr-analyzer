@@ -31,6 +31,7 @@ class ChangeFilter:
         r'^readme\.txt$',
         r'^readme$',
         r'.*/readme\.md$',
+        r'.*\.readme$',  # Added for Documentation.readme and Updates.readme
     ]
     
     # Documentation patterns (optional filtering)
@@ -105,27 +106,15 @@ class ChangeFilter:
     
     def get_code_files(self, filepaths: List[str]) -> List[str]:
         """
-        Get only code files (exclude tests, docs, and config).
+        Get files to analyze (excludes tests and documentation).
         
         Args:
             filepaths: List of file paths
             
         Returns:
-            List of code file paths
+            List of files to analyze
         """
-        code_files = []
-        
-        # Common config file patterns to exclude
-        config_patterns = [
-            r'^\..*',  # Dotfiles
-            r'.*\.json$',
-            r'.*\.ya?ml$',
-            r'.*\.toml$',
-            r'.*\.ini$',
-            r'.*\.lock$',
-            r'package.*\.json$',
-        ]
-        config_regex = re.compile('|'.join(config_patterns), re.IGNORECASE)
+        files_to_analyze = []
         
         for filepath in filepaths:
             # Skip test files
@@ -136,14 +125,11 @@ class ChangeFilter:
             if self.is_readme_file(filepath) or self.is_doc_file(filepath):
                 continue
             
-            # Skip config files
-            filename = Path(filepath).name
-            if config_regex.match(filename):
-                continue
+            # We now WANT to include config files, so we don't filter them out anymore.
             
-            code_files.append(filepath)
+            files_to_analyze.append(filepath)
         
-        return code_files
+        return files_to_analyze
 
 
 def should_skip_analysis(commit_message: str) -> bool:

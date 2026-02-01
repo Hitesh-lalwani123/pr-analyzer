@@ -93,26 +93,89 @@ class PRAnalyzer:
                 print("⏭️  No significant changes requiring README update")
                 return
             
-            # Save original README for diff
-            original_readme = self.readme_updater.content
-            
-            # Update README
-            print("📝 Updating README...")
-            readme_modified = self.readme_updater.update_from_analysis(analysis)
-            
-            if readme_modified:
-                # Generate diff preview
-                diff_preview = self.readme_updater.get_diff_preview(original_readme)
+            # --- Update Changelog (RELEASES.md) ---
+            changelog_updater = READMEUpdater("RELEASES.md")
+            if not changelog_updater.readme_path.exists():
+                print("⚠️  RELEASES.md not found, creating new one")
+                with open(changelog_updater.readme_path, 'w') as f:
+                    f.write("# Release Notes\n\n")
+                changelog_updater.load_readme()
                 
-                # Save README
-                self.readme_updater.save()
-                print("✅ README updated successfully")
+            original_changelog = changelog_updater.content
+            
+            # Determine version from source branch (head_ref), PR title, or body
+            import re
+            
+            version_name = "Unreleased"
+            
+            # Helper to find version in text
+            def find_version(text):
+                if not text: return None
+                # Support: release/1.0.0, release-1.0.0, v1.0.0
+                match = re.search(r'(?:release[/-]|v)([\d.]+)', text, re.IGNORECASE)
+                return match.group(1) if match else None
+
+            # 1. Try Head Ref (Source Branch)
+            # self.head_ref is the source branch
+            v_head = find_version(self.head_ref)
+            
+            # 2. Try PR Title
+            v_title = find_version(pr.title)
+            
+            # 3. Try PR Description
+            v_body = find_version(pr.body)
+            
+            if v_head:
+                version_name = v_head
+                print(f"📦 Version detected from branch: {version_name}")
+            elif v_title:
+                version_name = v_title
+                print(f"📦 Version detected from PR title: {version_name}")
+            elif v_body:
+                version_name = v_body
+                print(f"📦 Version detected from PR body: {version_name}")
+            else:
+                # Fallback to base ref or generic
+                 # If base is release/x.x match it too
+                 v_base = find_version(self.base_ref)
+                 if v_base:
+                     version_name = v_base
+                     print(f"📦 Version detected from base branch: {version_name}")
+                 else:
+                     print("ℹ️  No version detected, using 'Unreleased'")
+
+            changelog_modified = changelog_updater.update_changelog(analysis, version=version_name)
+            
+            if changelog_modified:
+                changelog_updater.save()
+                print("✅ RELEASES.md updated successfully")
+            
+            # --- Update Documentation (DOCUMENTATION.md) ---
+            doc_updater = READMEUpdater("DOCUMENTATION.md")
+            if not doc_updater.readme_path.exists():
+                 print("⚠️  DOCUMENTATION.md not found, skipping doc update")
+                 doc_modified = False
+                 original_doc = ""
+            else:
+                original_doc = doc_updater.content
+                doc_modified = doc_updater.update_from_analysis(analysis)
+                if doc_modified:
+                    doc_updater.save()
+                    print("✅ DOCUMENTATION.md updated successfully")
+            
+            if changelog_modified or doc_modified:
+                # Generate diff preview (prioritize changelog)
+                diff_preview = ""
+                if changelog_modified:
+                    diff_preview += changelog_updater.get_diff_preview(original_changelog)
+                if doc_modified:
+                    diff_preview += "\n" + doc_updater.get_diff_preview(original_doc)
                 
                 # Post comment to PR with changes
                 self._post_pr_comment(pr, analysis, diff_preview)
                 
             else:
-                print("ℹ️  README update attempted but no changes made")
+                print("ℹ️  Updates attempted but no changes made")
         
         except Exception as e:
             print(f"❌ Error during analysis: {e}")

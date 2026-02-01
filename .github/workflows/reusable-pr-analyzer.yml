@@ -39,10 +39,11 @@ jobs:
           CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
           echo "Changed files: $CHANGED_FILES"
           
-          # Check if only README was changed
+          # Check if only README/docs were changed
           README_ONLY=true
           while IFS= read -r file; do
-            if [[ ! "$file" =~ ^README\.md$ ]]; then
+            # Check for README.md, or .readme files
+            if [[ ! "$file" =~ ^README\.md$ ]] && [[ ! "$file" =~ \.readme$ ]]; then
               README_ONLY=false
               break
             fi
@@ -62,7 +63,7 @@ jobs:
         run: |
           echo "📥 Downloading PR analyzer scripts..."
           
-          BASE_URL="https://raw.githubusercontent.com/${{ github.repository_owner }}/pr-analyzer/main"
+          BASE_URL="https://raw.githubusercontent.com/${{ github.repository_owner }}/pr-analyzer/develop"
           
           curl -fsSL "$BASE_URL/analyzer.py" -o analyzer.py
           curl -fsSL "$BASE_URL/ai_analyzer.py" -o ai_analyzer.py
@@ -111,11 +112,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          if [[ -n $(git status -s) ]]; then
-            git add README.md
+          # Attempt to add the specific files we care about
+          # We do not use 'git add .' to avoid adding __pycache__ or other garbage
+          
+          # 1. README.md (might simply be modified)
+          git add README.md 2>/dev/null || true
+          
+          # 2. Add new doc files if they exist
+          [ -f RELEASES.md ] && git add RELEASES.md
+          [ -f DOCUMENTATION.md ] && git add DOCUMENTATION.md
+          
+          # 3. Check if anything is actually staged for commit
+          # This ignores untracked files that we didn't explicitly add
+          if [[ -n $(git diff --staged --name-only) ]]; then
             git commit -m "docs: update README based on PR changes [skip-pr-analyzer]"
             git push
             echo "✅ README updated and pushed"
           else
-            echo "ℹ️ No changes to commit"
+            echo "ℹ️  No relevant documentation changes to commit"
           fi
