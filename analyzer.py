@@ -93,40 +93,51 @@ class PRAnalyzer:
                 print("⏭️  No significant changes requiring README update")
                 return
             
-            # --- Update Changelog (Updates.readme) ---
-            changelog_updater = READMEUpdater("Updates.readme")
+            # --- Update Changelog (RELEASES.md) ---
+            changelog_updater = READMEUpdater("RELEASES.md")
             if not changelog_updater.readme_path.exists():
-                print("⚠️  Updates.readme not found, creating new one")
+                print("⚠️  RELEASES.md not found, creating new one")
                 with open(changelog_updater.readme_path, 'w') as f:
-                    f.write("# Changelog\n\n## Latest Updates\n")
+                    f.write("# Release Notes\n\n")
                 changelog_updater.load_readme()
                 
             original_changelog = changelog_updater.content
-            # Use PR title as "release" name version for now, or just "PR #123"
-            version_name = f"PR #{self.pr_number}"
+            
+            # Determine version from branch name
+            # e.g., "release/1.2.0" -> "1.2.0", "main" -> "Unreleased"
+            import re
+            version_match = re.search(r'release[/-]([\d.]+)', self.base_ref)
+            if version_match:
+                version_name = version_match.group(1)
+            elif self.base_ref in ['main', 'master']:
+                 # If merging to main/master without a release branch pattern, might be a direct merge
+                 # For now, let's keep it generic or try to find unrelated tags? 
+                 # User asked to take from base branch.
+                 version_name = "Unreleased"
+            else:
+                version_name = self.base_ref
+
             changelog_modified = changelog_updater.update_changelog(analysis, version=version_name)
             
             if changelog_modified:
                 changelog_updater.save()
-                print("✅ Updates.readme updated successfully")
+                print("✅ RELEASES.md updated successfully")
             
-            # --- Update Documentation (Documentation.readme) ---
-            doc_updater = READMEUpdater("Documentation.readme")
+            # --- Update Documentation (DOCUMENTATION.md) ---
+            doc_updater = READMEUpdater("DOCUMENTATION.md")
             if not doc_updater.readme_path.exists():
-                 print("⚠️  Documentation.readme not found, skipping doc update")
+                 print("⚠️  DOCUMENTATION.md not found, skipping doc update")
                  doc_modified = False
                  original_doc = ""
             else:
                 original_doc = doc_updater.content
-                doc_modified = doc_updater.update_from_analysis(analysis) # This updates "Features" section
+                doc_modified = doc_updater.update_from_analysis(analysis)
                 if doc_modified:
                     doc_updater.save()
-                    print("✅ Documentation.readme updated successfully")
-
+                    print("✅ DOCUMENTATION.md updated successfully")
+            
             if changelog_modified or doc_modified:
-                # Generate diff preview (prioritize changelog for brevity in comment if both changed, or show combined?)
-                # For simplicity, let's show the changelog diff as it's the "log" requested.
-                
+                # Generate diff preview (prioritize changelog)
                 diff_preview = ""
                 if changelog_modified:
                     diff_preview += changelog_updater.get_diff_preview(original_changelog)
