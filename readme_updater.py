@@ -105,48 +105,106 @@ class READMEUpdater:
         Returns:
             True if modified
         """
+    def update_changelog(self, analysis: Dict[str, any], version: str = "Unreleased") -> bool:
+        """
+        Append changelog entry to RELEASES.md.
+        
+        Args:
+            analysis: Analysis results
+            version: Version string for the header
+            
+        Returns:
+            True if modified
+        """
         if not (analysis.get('new_features') or analysis.get('removed_features') or 
                 analysis.get('modified_features') or analysis.get('configuration_updates')):
             return False
             
         import datetime
         date_str = datetime.date.today().isoformat()
+        version_header = f"## {version}"
         
-        entry = f"\n## {version} ({date_str})\n\n"
+        # Helper to generate bullet points
+        def get_bullets(items):
+            return "".join([f"- {item}\n" for item in items])
+
+        changes = {}
+        if analysis.get('new_features'): changes['Added'] = get_bullets(analysis['new_features'])
+        if analysis.get('removed_features'): changes['Removed'] = get_bullets(analysis['removed_features'])
+        if analysis.get('modified_features'): changes['Changed'] = get_bullets(analysis['modified_features'])
+        if analysis.get('configuration_updates'): changes['Configuration'] = get_bullets(analysis['configuration_updates'])
+
+        if not changes:
+            return False
+
+        # Regex to find existing version section
+        # Matches "## Version (Date)" until the next "## " or End of string
+        pattern = re.compile(rf"({re.escape(version_header)}[^\n]*\n)(.*?)(?=\n## |\Z)", re.DOTALL)
+        match = pattern.search(self.content)
         
-        if analysis.get('new_features'):
-            entry += "### Added\n"
-            for feature in analysis['new_features']:
-                entry += f"- {feature}\n"
-            entry += "\n"
+        if match:
+            # Merge into existing section
+            full_match = match.group(0)
+            header_line = match.group(1)
+            body = match.group(2)
             
-        if analysis.get('removed_features'):
-            entry += "### Removed\n"
-            for feature in analysis['removed_features']:
-                entry += f"- {feature}\n"
-            entry += "\n"
+            new_body = body
             
-        if analysis.get('modified_features'):
-            entry += "### Changed\n"
-            for feature in analysis['modified_features']:
-                entry += f"- {feature}\n"
-            entry += "\n"
-
-        if analysis.get('configuration_updates'):
-            entry += "### Configuration\n"
-            for config in analysis['configuration_updates']:
-                entry += f"- {config}\n"
-            entry += "\n"
-
-        # Insert after "Latest Updates" header if it exists, otherwise append
-        latest_updates_header = "## Latest Updates"
-        if latest_updates_header in self.content:
-            parts = self.content.split(latest_updates_header)
-            self.content = parts[0] + latest_updates_header + entry + parts[1]
+            for category, bullets in changes.items():
+                cat_header = f"### {category}"
+                if cat_header in new_body:
+                    # Append to existing category
+                    # Find category block
+                    cat_pattern = re.compile(rf"({re.escape(cat_header)}\n)(.*?)(?=\n### |\n## |\Z)", re.DOTALL)
+                    cat_match = cat_pattern.search(new_body)
+                    if cat_match:
+                        # Add new bullets to existing bullets
+                        existing_bullets = cat_match.group(2)
+                        # Avoid duplicates
+                        new_unique_bullets = ""
+                        for line in bullets.splitlines(keepends=True):
+                             if line.strip() not in existing_bullets:
+                                 new_unique_bullets += line
+                        
+                        if new_unique_bullets:
+                            # Replace the category block with old + new
+                            new_cat_block = cat_match.group(1) + existing_bullets.rstrip() + "\n" + new_unique_bullets
+                            new_body = new_body.replace(cat_match.group(0), new_cat_block)
+                else:
+                    # Add new category
+                    new_body = new_body.rstrip() + f"\n\n{cat_header}\n{bullets}"
+            
+            if new_body != body:
+                self.content = self.content.replace(full_match, header_line + new_body)
+                return True
+                
         else:
-            self.content += entry
+            # Create new version entry
+            new_entry = f"\n{version_header} ({date_str})\n\n"
+            for category, bullets in changes.items():
+                new_entry += f"### {category}\n{bullets}\n"
+                
+            # Insert logic
+            if "Release Notes" in self.content:
+                # Insert after "Release Notes" header line
+                # Find the line "Release Notes"
+                lines = self.content.splitlines(keepends=True)
+                inserted = False
+                for i, line in enumerate(lines):
+                    if "# Release Notes" in line:
+                         lines.insert(i + 1, new_entry)
+                         inserted = True
+                         break
+                if inserted:
+                    self.content = "".join(lines)
+                else:
+                    self.content += new_entry
+            else:
+                 self.content = "# Release Notes\n" + new_entry + self.content
             
-        return True
+            return True
+            
+        return False
 
     def update_from_analysis(self, analysis: Dict[str, any]) -> bool:
         """
@@ -301,10 +359,25 @@ class READMEUpdater:
         """Insert content after the preamble/title section."""
         lines = self.content.split('\n')
         
+        # Special case: If "Release Notes" is the title, insert after it.
+        # Check first line
+        if lines and "Release Notes" in lines[0]:
+             # Insert after line 0 (Title)
+             lines.insert(1, new_content)
+             return '\n'.join(lines)
+        
         # Find first header
         for i, line in enumerate(lines):
             if re.match(r'^#{1,6}\s+', line):
-                # Insert before first header
+                # If this header is "Release Notes", insert AFTER it 
+                # (Assuming "Release Notes" is a section container, and we want entries inside it)
+                # But actually, usually "Release Notes" is the H1, and we want "## v1.0" as H2s after it.
+                
+                if "Release Notes" in line:
+                     lines.insert(i + 1, new_content)
+                     return '\n'.join(lines)
+                
+                # Otherwise, insert before first header (as preamble)
                 lines.insert(i, new_content)
                 return '\n'.join(lines)
         
@@ -313,30 +386,26 @@ class READMEUpdater:
     
     def _rebuild_content(self):
         """Rebuild the content string from modified sections."""
-        lines = self.content.split('\n')
+        # Robust rebuild by concatenating sections instead of line slicing
+        new_lines = []
         
+        # Ensure preamble is first if it exists
+        if 'preamble' in self.sections:
+            new_lines.append(self.sections['preamble']['content'])
+            
         for section_name, section_data in self.sections.items():
             if section_name == 'preamble':
                 continue
-            
-            start = section_data['line_start']
-            end = section_data['line_end']
+                
             level = section_data['level']
-            
-            # Rebuild section
             header = '#' * level + ' ' + section_name
-            new_section_lines = [header] + section_data['content'].split('\n')
+            new_lines.append(header)
             
-            # Replace in original lines
-            # Note: This logic works for simple replacements but might be fragile if multiple sections change
-            # However, for this task it should suffice as we re-parse after major structural changes if needed
-            # A safer way would be to rebuild the whole file from sections, but we want to preserve other content
-            
-            # Simple check: if size changed significantly, might need care.
-            # But here we just assume lines[start:end+1] captures the old section.
-            lines[start:end + 1] = new_section_lines
-        
-        self.content = '\n'.join(lines)
+            content = section_data['content']
+            if content:
+                new_lines.append(content)
+                
+        self.content = '\n'.join(new_lines)
     
     def _update_documentation_entries(self, entries: List[Dict[str, str]]) -> bool:
         """

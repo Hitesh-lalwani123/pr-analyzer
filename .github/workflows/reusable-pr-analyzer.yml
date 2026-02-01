@@ -119,8 +119,8 @@ jobs:
           git add README.md 2>/dev/null || true
           
           # 2. Add new doc files if they exist
-          [ -f Updates.readme ] && git add Updates.readme
-          [ -f Documentation.readme ] && git add Documentation.readme
+          [ -f RELEASES.md ] && git add RELEASES.md
+          [ -f DOCUMENTATION.md ] && git add DOCUMENTATION.md
           
           # 3. Check if anything is actually staged for commit
           # This ignores untracked files that we didn't explicitly add
