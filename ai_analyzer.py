@@ -107,20 +107,34 @@ INSTRUCTIONS:
 2. Identify REMOVED or DEPRECATED features
 3. Identify MODIFIED features (significant changes to existing functionality)
 4. Identify CONFIGURATION updates (e.g., dependency version changes, new environment variables, workflow updates, settings)
-5. Determine the significance level: LOW (minor changes), MEDIUM (notable features), HIGH (major functionality)
-6. Provide a brief summary suitable for documentation
+5. For each NEW or MODIFIED feature, provide a "documentation_entry" with:
+    - Name: Function/Feature name
+    - Description: What it does (high level)
+    - Input: What it accepts (args, parameters, etc.)
+    - Output: What it returns or produces
+6. Determine the significance level: LOW (minor changes), MEDIUM (notable features), HIGH (major functionality)
+7. Provide a brief summary suitable for documentation
 
-Focus on user-facing features and significant architectural changes. Ignore:
-- Test file changes
-- Minor refactoring without functional impact
-- Code style changes
+Focus on user-facing features and significant architectural changes. 
+IMPORTANT: 
+- Bug fixes, minor refactors (e.g. "removed semicolon"), and internal cleanup should ONLY go to "modified_features" or ignored, NOT "new_features" or "documentation_entries".
+- "documentation_entries" are for the permanent "Documentation.readme" and should be high-quality and detailed.
+- "new_features" and "modified_features" are for the "Updates.readme" changelog.
 
 Respond in the following JSON format:
 {{
     "new_features": ["Feature 1 description", "Feature 2 description"],
     "removed_features": ["Removed feature description"],
-    "modified_features": ["Modified feature description"],
+    "modified_features": ["Modified feature description", "Bug fix description"],
     "configuration_updates": ["Dependency X updated to Y", "Added ENV_VAR"],
+    "documentation_entries": [
+        {{
+            "name": "feature_name",
+            "description": "High level description",
+            "input": "List of numbers",
+            "output": "Largest number"
+        }}
+    ],
     "significance": "low|medium|high",
     "summary": "Brief summary of changes suitable for documentation"
 }}
@@ -163,6 +177,7 @@ Be concise and focus on what matters to end users and developers reading the doc
                 'removed_features': data.get('removed_features', []),
                 'modified_features': data.get('modified_features', []),
                 'configuration_updates': data.get('configuration_updates', []),
+                'documentation_entries': data.get('documentation_entries', []),
                 'significance': data.get('significance', 'medium').lower(),
                 'summary': data.get('summary', '')
             }
